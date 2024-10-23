@@ -2,8 +2,10 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import usersRoutes from './routes/users.js';
 import path from 'path';
+import log from 'npmlog';
 import Log from './logger/logger.js';
 
+// const log = require('npmlog')
 const app = express();
 const PORT = 5000;
 
@@ -19,7 +21,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/', (req, res) => {
-    Log.info("GET request to endpoint '/' received.");
+    log.info("GET request to endpoint '/' received.");
 
     res.send("Node Express API App");
 })
