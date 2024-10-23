@@ -2,7 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import usersRoutes from './routes/users.js';
 import path from 'path';
-import log from './logger/logger.js';
+import Log from './logger/logger.js';
 
 const app = express();
 const PORT = 5000;
@@ -19,11 +19,11 @@ app.get('/', (req, res) => {
 })
 
 app.get('/', (req, res) => {
-    log.info("GET request to endpoint '/' received.");
+    Log.info("GET request to endpoint '/' received.");
 
     res.send("Node Express API App");
 })
 
 app.use('/users', usersRoutes);
 
-app.listen(PORT, () => log.server(`Server is running on http://localhost:${PORT}`))
+app.listen(PORT, () => Log.server(`Server is running on http://localhost:${PORT}`))
