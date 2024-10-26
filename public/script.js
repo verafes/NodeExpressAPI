@@ -4,7 +4,9 @@ const lastNameInput = document.getElementById('lastname')
 const ageInput = document.getElementById('age')
 const addButton = document.getElementById('addButton')
 const usersList = document.getElementById('usersList')
+
 let rowNumber = 1
+
 //mock data
 const usersFromData = [
     {
@@ -28,10 +30,11 @@ const usersFromData = [
 ]
 //JSON -> Object
 const storedUsers = JSON.parse(JSON.stringify(usersFromData))
+
 class UI {
     static async displayAppName() {
         try {
-            appName.innerText = await UserService.getAppName()
+            appName.innerText =  await AppService.getAppName();
         } catch (error) {
             console.log("Error while fetch appName")
             throw error
@@ -48,10 +51,15 @@ class UI {
         console.log("isValid = ", isValid)
         addButton.disabled = !isValid
     }
-    static displayUsers() {
-        const users = storedUsers
-        if (users.length) {
+    static async displayUsers() {
+        // const users = storedUsers; // Mock data
+        const users = await UserService.getUser() || [];
+        console.log(users);
+        console.log(users.size);
+
+        if (users.size) {
             users.forEach((user) => {
+                console.log('user = ', user);
                 UI.addUserToList(user)
             })
         }
@@ -69,7 +77,8 @@ class UI {
         rowNumber++
     }
 }
-class UserService {
+
+class AppService {
     static getAppName() {
         return fetch("http://localhost:5000/api/")
             .then(response =>{
@@ -86,6 +95,83 @@ class UserService {
             })
     }
 }
+
+class UserService {
+    static getUser() {
+        return fetch("http://localhost:5000/api/users/")
+            .then(response  => {
+                if (response.status !== 200) {
+                    console.error("[ERROR] Response status: ", response.status);
+                    throw new Error("Failed to fetch users.")
+                }
+                // if response.code = 200 -> 2 ways
+                const contentType = response.headers.get('Content-Type');
+
+                // 1. Content type = 'text/html'
+                if (contentType.includes('text/html')) {
+                    // "There are no users"
+                    return response.text();
+
+                    // 2. Content type = 'application/json'
+                } else if (contentType.includes('application/json')) {
+                    // list of users in json
+                    return response.json();
+                    // 3. catchError
+                } else {
+                    console.error("[ERROR] Unexpected Content-Type: ", contentType);
+                    throw new Error("[ERROR] Unexpected Content-Type.")
+                }
+            })
+            .catch(error => {
+                console.error("Fetch error: ", error);
+                throw error;
+            })
+    }
+
+    static postUsers(firstName, lastName, age) {
+        if(!firstName || !lastName || age === undefined) {
+            console.error("[ERROR] Invalid parameters.")
+            throw new Error ("Invalid parameters.");
+        }
+
+        try {
+            const response = fetch(
+                "http://localhost:5000/api/users/",
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(
+                        {
+                            firstName: firstName,
+                            lastName: lastName,
+                            age: age,
+                        }
+                    )
+                })
+
+            if (response.status !== 200) {
+                console.error("[ERROR] Response status:", response.status);
+                throw new Error("Failed to fetch users.");
+            }
+
+            const contentType = response.headers.get('Content-Type');
+
+            if(contentType.includes('text/html')) {
+
+                return response.text();
+            } else {
+                console.error("[ERROR] Unexpected Content-Type: ", contentType);
+                throw new Error("Unexpected Content-Type.");
+            }
+        } catch(error) {
+            console.error("Fetch error: ", error);
+            throw error;
+        }
+    }
+}
+
 //event to show App Name
 document.addEventListener('DOMContentLoaded', UI.displayAppName)
 //event to activate addButton

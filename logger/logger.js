@@ -1,18 +1,18 @@
 class Log {
-    static info = text => {
-        console.info(`[getDate()]`, "[INFO]", text);
+    info = text => {
+        console.info(`[${getDate()}]`, "[INFO]", text);
     }
     static warning = text => {
-        console.info(`[getDate()]`, "[INFO]", text);
+        console.info(`[${getDate()}]`, "[INFO]", text);
     }
     static error = text => {
-        console.info(`[getDate()]`, "[INFO]", text);
+        console.info(`[${getDate()}]`, "[INFO]", text);
     }
     static fatal= text => {
-        console.info(getData(), "[FATAL]", text)
+        console.info(`[${getDate()}]`, "[FATAL]", text)
     }
     static server = text => {
-        console.info(`[getDate()]`, "[SEVR]", text);
+        console.info(`[${getDate()}]`, "[SEVR]", text);
     }
     //runner
     //test
@@ -23,6 +23,5 @@ function getDate() {
     return date.toLocaleDateString('en-US', {timeZoneName: 'short'});
 }
 
-// const log = new Log();
-
-export default Log;
+const log = new Log();
+export default log;

@@ -2,10 +2,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import usersRoutes from './routes/users.js';
 import path from 'path';
-import log from 'npmlog';
-import Log from './logger/logger.js';
+import log from './logger/logger.js';
 
-// const log = require('npmlog')
 const app = express();
 const PORT = 5000;
 
@@ -20,12 +18,12 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(staticPath, 'index.html'));
 })
 
-app.get('/', (req, res) => {
+app.get('/api/', (req, res) => {
     log.info("GET request to endpoint '/' received.");
 
-    res.send("Node Express API App");
+    res.send("Node Express API Server App");
 })
 
 app.use('/users', usersRoutes);
 
-app.listen(PORT, () => Log.server(`Server is running on http://localhost:${PORT}`))
+app.listen(PORT, () => log.server(`Server is running on http://localhost:${PORT}`));
