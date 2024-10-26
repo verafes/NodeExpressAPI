@@ -1,9 +1,9 @@
-const appName = document.getElementById('appName')
-const firstNameInput = document.getElementById('firstname')
-const lastNameInput = document.getElementById('lastname')
-const ageInput = document.getElementById('age')
-const addButton = document.getElementById('addButton')
-const usersList = document.getElementById('usersList')
+const appName = document.getElementById('appName');
+const firstNameInput = document.getElementById('firstName');
+const lastNameInput = document.getElementById('lastName');
+const ageInput = document.getElementById('age');
+const addButton = document.getElementById('addButton');
+const usersList = document.getElementById('usersList');
 
 let rowNumber = 1
 
@@ -28,8 +28,17 @@ const usersFromData = [
         "id": "23232325"
     }
 ]
-//JSON -> Object
+
 const storedUsers = JSON.parse(JSON.stringify(usersFromData))
+
+class User {
+    constructor(firstName, lastName, age, id) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.age = age;
+        this.id = id;
+    }
+}
 
 class UI {
     static async displayAppName() {
@@ -40,17 +49,21 @@ class UI {
             throw error
         }
     }
+
     static isFormValid() {
-        const isFirstNameValid = firstNameInput.value.trim().length > 0
-        const isLastNameValid = lastNameInput.value.trim().length > 0
-        const isAgeValid = ageInput.value.trim().length > 0
-        return isFirstNameValid && isLastNameValid && isAgeValid
+        const isFirstNameValid = firstNameInput.value.trim().length > 0;
+        const isLastNameValid = lastNameInput.value.trim().length > 0;
+        const isAgeValid = ageInput.value.trim().length > 0;
+
+        return isFirstNameValid && isLastNameValid && isAgeValid;
     }
+
     static activateAddButton() {
-        const isValid = UI.isFormValid()
-        console.log("isValid = ", isValid)
-        addButton.disabled = !isValid
+        const isValid = UI.isFormValid();
+        console.log("isValid = ", isValid);
+        addButton.disabled = !isValid;
     }
+
     static async displayUsers() {
         // const users = storedUsers; // Mock data
         const users = await UserService.getUser() || [];
@@ -64,6 +77,7 @@ class UI {
             })
         }
     }
+
     static addUserToList(user) {
         const row = document.createElement('tr')
         row.innerHTML = `
@@ -75,6 +89,18 @@ class UI {
         `;
         usersList.appendChild(row)
         rowNumber++
+    }
+
+    static async createUser() {
+        if(UI.isFormValid()) {
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            const age = ageInput.value;
+
+            await UserService.postUsers(firstName, lastName, age);
+            console.log(firstName, lastName, age)
+            await UserService.getUser();
+        }
     }
 }
 
@@ -99,7 +125,7 @@ class AppService {
 class UserService {
     static getUser() {
         return fetch("http://localhost:5000/api/users/")
-            .then(response  => {
+            .then(async response => {
                 if (response.status !== 200) {
                     console.error("[ERROR] Response status: ", response.status);
                     throw new Error("Failed to fetch users.")
@@ -110,7 +136,8 @@ class UserService {
                 // 1. Content type = 'text/html'
                 if (contentType.includes('text/html')) {
                     // "There are no users"
-                    return response.text();
+                    const responseText = await response.text();
+                    return responseText;
 
                     // 2. Content type = 'application/json'
                 } else if (contentType.includes('application/json')) {
@@ -128,14 +155,14 @@ class UserService {
             })
     }
 
-    static postUsers(firstName, lastName, age) {
+    static async postUsers(firstName, lastName, age) {
         if(!firstName || !lastName || age === undefined) {
             console.error("[ERROR] Invalid parameters.")
             throw new Error ("Invalid parameters.");
         }
 
         try {
-            const response = fetch(
+            const response = await fetch(
                 "http://localhost:5000/api/users/",
                 {
                     method: 'POST',
@@ -149,24 +176,25 @@ class UserService {
                             age: age,
                         }
                     )
-                })
+                });
 
             if (response.status !== 200) {
                 console.error("[ERROR] Response status:", response.status);
-                throw new Error("Failed to fetch users.");
+                throw new Error("Failed to post users.");
             }
 
-            const contentType = response.headers.get('Content-Type');
+            const contentType = response.headers.get('content-type');
 
             if(contentType.includes('text/html')) {
-
-                return response.text();
+                const responseText = await response.text();
+                console.log("Content Type = ", responseText);
+                return responseText;
             } else {
                 console.error("[ERROR] Unexpected Content-Type: ", contentType);
                 throw new Error("Unexpected Content-Type.");
             }
         } catch(error) {
-            console.error("Fetch error: ", error);
+            console.error("Fetch error:", error);
             throw error;
         }
     }
@@ -178,3 +206,8 @@ document.addEventListener('DOMContentLoaded', UI.displayAppName)
 document.addEventListener('input', UI.activateAddButton)
 //event to display users
 document.addEventListener("DOMContentLoaded", UI.displayUsers)
+//event to add user to DB, get list of all users, create user as an object, and display user in the table
+document.getElementById('form-user').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await UI.createUser();
+});

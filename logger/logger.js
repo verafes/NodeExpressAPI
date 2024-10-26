@@ -2,16 +2,16 @@ class Log {
     info = text => {
         console.info(`[${getDate()}]`, "[INFO]", text);
     }
-    static warning = text => {
+    warning = text => {
         console.info(`[${getDate()}]`, "[INFO]", text);
     }
-    static error = text => {
+    error = text => {
         console.info(`[${getDate()}]`, "[INFO]", text);
     }
-    static fatal= text => {
-        console.info(`[${getDate()}]`, "[FATAL]", text)
+   fatal = text => {
+        console.info(`[${getDate()}]`, "[FATAL]", text);
     }
-    static server = text => {
+    server = text => {
         console.info(`[${getDate()}]`, "[SEVR]", text);
     }
     //runner
