@@ -4,6 +4,7 @@ const lastNameInput = document.getElementById('lastName');
 const ageInput = document.getElementById('age');
 const addButton = document.getElementById('addButton');
 const usersList = document.getElementById('usersList');
+const form = document.getElementById('form-user');
 
 let rowNumber = 1
 
@@ -68,9 +69,9 @@ class UI {
         // const users = storedUsers; // Mock data
         const users = await UserService.getUser() || [];
         console.log(users);
-        console.log(users.size);
+        console.log("users size", users.length);
 
-        if (users.size) {
+        if (users.length) {
             users.forEach((user) => {
                 console.log('user = ', user);
                 UI.addUserToList(user)
@@ -97,9 +98,31 @@ class UI {
             const lastName = lastNameInput.value.trim();
             const age = ageInput.value;
 
+            //API call POST to endpoint '/users'
             await UserService.postUsers(firstName, lastName, age);
-            console.log(firstName, lastName, age)
-            await UserService.getUser();
+
+            //API call GET to endpoint '/users'
+            const users = await UserService.getUser();
+
+            console.log("users from GET call", users);
+
+            let userID = 0;
+            let newUser = {};
+
+            users.forEach((user) => {
+                if(user.firstName === firstName
+                    && user.lastName === lastName
+                    && user.age === age
+                ) {
+                    userID = user.id;
+                    console.log("userID from server = ", userID);
+
+                    newUser = new User(user.firstName, user.lastName, user.age, userID);
+                    console.log("Object of class User (OOP): ", newUser);
+                }
+            })
+
+            return newUser;
         }
     }
 }
@@ -110,7 +133,7 @@ class AppService {
             .then(response =>{
                 if (response.status !== 200) {
                     console.log("[ERROR] response status: ", response.status)
-                    throw new Error('Failed to fetch appName')
+                    throw new Error('[ERROR] Failed to fetch app name. Unexpected response status.')
                 } else{
                     return response.text()
                 }
@@ -128,7 +151,7 @@ class UserService {
             .then(async response => {
                 if (response.status !== 200) {
                     console.error("[ERROR] Response status: ", response.status);
-                    throw new Error("Failed to fetch users.")
+                    throw new Error("[ERROR] Failed to fetch users.")
                 }
                 // if response.code = 200 -> 2 ways
                 const contentType = response.headers.get('Content-Type');
@@ -139,18 +162,18 @@ class UserService {
                     const responseText = await response.text();
                     return responseText;
 
-                    // 2. Content type = 'application/json'
+                // 2. Content type = 'application/json'
                 } else if (contentType.includes('application/json')) {
                     // list of users in json
                     return response.json();
-                    // 3. catchError
+                // 3. catchError
                 } else {
                     console.error("[ERROR] Unexpected Content-Type: ", contentType);
                     throw new Error("[ERROR] Unexpected Content-Type.")
                 }
             })
             .catch(error => {
-                console.error("Fetch error: ", error);
+                console.error("[ERROR] Fetch error: ", error);
                 throw error;
             })
     }
@@ -207,7 +230,11 @@ document.addEventListener('input', UI.activateAddButton)
 //event to display users
 document.addEventListener("DOMContentLoaded", UI.displayUsers)
 //event to add user to DB, get list of all users, create user as an object, and display user in the table
-document.getElementById('form-user').addEventListener('submit', async (event) => {
+form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    await UI.createUser();
+    const user = await UI.createUser();
+    UI.addUserToList(user);
+
+    form.reset();
+    addButton.disabled = true;
 });
