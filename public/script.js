@@ -46,8 +46,8 @@ class UI {
         try {
             appName.innerText =  await AppService.getAppName();
         } catch (error) {
-            console.log("Error while fetch appName")
-            throw error
+            console.error('Error while catching app name: ', error);
+            throw error;
         }
     }
 
@@ -67,14 +67,15 @@ class UI {
 
     static async displayUsers() {
         // const users = storedUsers; // Mock data
-        const users = await UserService.getUser() || [];
+        const users = await UserService.getUsers() || [];
         console.log(users);
         console.log("users size", users.length);
 
-        if (users.length) {
+        // if (Array.isArray(users) && users.length) {
+        if(users.size) {
             users.forEach((user) => {
                 console.log('user = ', user);
-                UI.addUserToList(user)
+                UI.addUserToList(user);
             })
         }
     }
@@ -102,7 +103,7 @@ class UI {
             await UserService.postUsers(firstName, lastName, age);
 
             //API call GET to endpoint '/users'
-            const users = await UserService.getUser();
+            const users = await UserService.getUsers();
 
             console.log("users from GET call", users);
 
@@ -130,25 +131,25 @@ class UI {
 class AppService {
     static getAppName() {
         return fetch("http://localhost:5000/api/")
-            .then(response =>{
+            .then(response => {
                 if (response.status !== 200) {
-                    console.log("[ERROR] response status: ", response.status)
+                    console.error("[ERROR] Response status: ", response.status);
                     throw new Error('[ERROR] Failed to fetch app name. Unexpected response status.')
-                } else{
-                    return response.text()
                 }
+
+                return response.text();
             })
             .catch(error => {
-                console.log("fetch error", error)
-                throw error
+                console.error('[ERROR] Fetch error:', error);
+                throw error;
             })
     }
 }
 
 class UserService {
-    static getUser() {
+    static getUsers() {
         return fetch("http://localhost:5000/api/users/")
-            .then(async response => {
+            .then(response => {
                 if (response.status !== 200) {
                     console.error("[ERROR] Response status: ", response.status);
                     throw new Error("[ERROR] Failed to fetch users.")
@@ -159,8 +160,8 @@ class UserService {
                 // 1. Content type = 'text/html'
                 if (contentType.includes('text/html')) {
                     // "There are no users"
-                    const responseText = await response.text();
-                    return responseText;
+
+                    return response.text();
 
                 // 2. Content type = 'application/json'
                 } else if (contentType.includes('application/json')) {
@@ -199,19 +200,18 @@ class UserService {
                             age: age,
                         }
                     )
-                });
+                })
 
             if (response.status !== 200) {
                 console.error("[ERROR] Response status:", response.status);
                 throw new Error("Failed to post users.");
             }
 
-            const contentType = response.headers.get('content-type');
+            const contentType = response.headers.get('Content-Type');
 
             if(contentType.includes('text/html')) {
-                const responseText = await response.text();
-                console.log("Content Type = ", responseText);
-                return responseText;
+
+                return await response.text();
             } else {
                 console.error("[ERROR] Unexpected Content-Type: ", contentType);
                 throw new Error("Unexpected Content-Type.");
@@ -224,11 +224,14 @@ class UserService {
 }
 
 //event to show App Name
-document.addEventListener('DOMContentLoaded', UI.displayAppName)
+document.addEventListener('DOMContentLoaded', UI.displayAppName);
+
 //event to activate addButton
-document.addEventListener('input', UI.activateAddButton)
+document.addEventListener('input', UI.activateAddButton);
+
 //event to display users
-document.addEventListener("DOMContentLoaded", UI.displayUsers)
+document.addEventListener("DOMContentLoaded", UI.displayUsers);
+
 //event to add user to DB, get list of all users, create user as an object, and display user in the table
 form.addEventListener('submit', async (event) => {
     event.preventDefault();
