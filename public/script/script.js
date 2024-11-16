@@ -226,7 +226,7 @@ class AppService {
 
 class UserService {
     static getUsers() {
-        return fetch(`http://localhost:${PORT}/api/`)
+        return fetch(`http://localhost:${PORT}/api/users/`)
             .then(response => {
                 if (response.status !== 200) {
                     console.error("[ERROR] Response status: ", response.status);
@@ -265,7 +265,7 @@ class UserService {
 
         try {
             const response = await fetch(
-                `http://localhost:${PORT}/api/`,
+                `http://localhost:${PORT}/api/users/`,
                 {
                     method: 'POST',
                     headers: {
