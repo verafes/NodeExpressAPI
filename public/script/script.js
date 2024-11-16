@@ -75,7 +75,6 @@ class UI {
         console.log(users);
 
         if (Array.isArray(users) && users.length) {
-        // if(typeof users !== 'string' && users.length) {
             users.forEach((user) => {
                 console.log('user = ', user);
                 UI.addUserToList(user);
@@ -209,7 +208,7 @@ class UI {
 
 class AppService {
     static getAppName() {
-        return fetch("http://localhost:5000/api/")
+        return fetch(`http://localhost:${PORT}/api/`)
             .then(response => {
                 if (response.status !== 200) {
                     console.error("[ERROR] Response status: ", response.status);
@@ -227,7 +226,7 @@ class AppService {
 
 class UserService {
     static getUsers() {
-        return fetch("http://localhost:5000/api/users/")
+        return fetch(`http://localhost:${PORT}/api/`)
             .then(response => {
                 if (response.status !== 200) {
                     console.error("[ERROR] Response status: ", response.status);
@@ -266,7 +265,7 @@ class UserService {
 
         try {
             const response = await fetch(
-                "http://localhost:5000/api/users/",
+                `http://localhost:${PORT}/api/`,
                 {
                     method: 'POST',
                     headers: {
