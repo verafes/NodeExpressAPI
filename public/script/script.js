@@ -1,12 +1,16 @@
 const appName = document.getElementById('appName');
+const userIdInput = document.getElementById('userId');
 const firstNameInput = document.getElementById('firstName');
 const lastNameInput = document.getElementById('lastName');
 const ageInput = document.getElementById('age');
 const addButton = document.getElementById('addButton');
+const searchButton = document.getElementById('searchButton');
 const usersList = document.getElementById('usersList');
-const form = document.getElementById('form-user');
+const formAdd = document.getElementById('form-user');
+const formSearch = document.getElementById('form-search');
 
-let rowNumber = 1
+let rowNumber = 1;
+const PORT = 5000;
 
 //mock data
 const usersFromData = [
@@ -30,7 +34,7 @@ const usersFromData = [
     }
 ]
 
-const storedUsers = JSON.parse(JSON.stringify(usersFromData))
+const storedUsers = JSON.parse(JSON.stringify(usersFromData));
 
 class User {
     constructor(firstName, lastName, age, id) {
@@ -45,7 +49,7 @@ class UI {
     static async displayAppName() {
         try {
             appName.innerText =  await AppService.getAppName();
-        } catch (error) {
+        } catch(error) {
             console.error('Error while catching app name: ', error);
             throw error;
         }
@@ -69,19 +73,18 @@ class UI {
         // const users = storedUsers; // Mock data
         const users = await UserService.getUsers() || [];
         console.log(users);
-        console.log("users size", users.length);
 
-        // if (Array.isArray(users) && users.length) {
-        if(users.size) {
+        if (Array.isArray(users) && users.length) {
+        // if(typeof users !== 'string' && users.length) {
             users.forEach((user) => {
                 console.log('user = ', user);
                 UI.addUserToList(user);
-            })
+            });
         }
     }
 
     static addUserToList(user) {
-        const row = document.createElement('tr')
+        const row = document.createElement('tr');
         row.innerHTML = `
             <th scope="row">${rowNumber}</th>
             <td>${user.firstName}</td>
@@ -89,7 +92,7 @@ class UI {
             <td>${user.age}</td>
             <td>${user.id}</td>
         `;
-        usersList.appendChild(row)
+        usersList.appendChild(row);
         rowNumber++
     }
 
@@ -126,6 +129,82 @@ class UI {
             return newUser;
         }
     }
+
+    static getSearchCriteria() {
+        const userIdValue = userIdInput.value.trim().length > 0 ? userIdInput.value.trim() : '';
+        const fistNameValue = firstNameInput.value.trim().length > 0 ? firstNameInput.value.trim() : '';
+        const lastNameValue = lastNameInput.value.trim().length > 0 ? lastNameInput.value.trim() : '';
+        const ageValue = ageInput.value.trim().length > 0 ? ageInput.value.trim() : -1;
+
+        if(userIdValue.length || fistNameValue.length || lastNameValue.length || ageValue !== -1) {
+            return {
+                'userId' : userIdValue,
+                'firstName' : fistNameValue,
+                'lastName' : lastNameValue,
+                'age': ageValue,
+            };
+        }
+
+        return {};
+    }
+
+    static isSearchCriteriaValid(searchCriteria) {
+        return Object.keys(searchCriteria).length > 0;
+
+    }
+
+    static activateSearchButton() {
+        const searchCriteria = UI.getSearchCriteria();
+        console.log("searchCriteria", searchCriteria);
+
+        if(UI.isSearchCriteriaValid(searchCriteria)) {
+            searchButton.disabled = false;
+        }
+    }
+
+    static preventSearchUrl() {
+        if(window.location.pathname === '/search?') {
+            window.history.pushState({}, '', '/search');
+        }
+    }
+
+    static async searchUsers() {
+        const searchCriteria = UI.getSearchCriteria();
+        if(UI.isSearchCriteriaValid(searchCriteria)) {
+            const users = await UserService.getUsers() || [];
+
+            console.log("Users from DB: ", users);
+
+            if(typeof users !== 'string' && users.length) {
+                usersList.innerHTML = '';
+                let searchResultRowNumber = 1;
+                users.forEach((user) => {
+                    if (
+                        user.id === searchCriteria.userId
+                        || user.firstName === searchCriteria.firstName
+                        || user.lastName === searchCriteria.lastName
+                        || user.age === searchCriteria.age
+                    ) {
+                        const foundUser = new User(user.firstName, user.lastName, user.age, user.id);
+
+                        console.log("Found User: ", foundUser);
+
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <th scope="row">${searchResultRowNumber}</th>
+                            <td>${user.firstName}</td>
+                            <td>${user.lastName}</td>
+                            <td>${user.age}</td>
+                            <td>${user.id}</td>
+                        `;
+
+                        usersList.appendChild(row);
+                        searchResultRowNumber ++;
+                    }
+                })
+            }
+        }
+    }
 }
 
 class AppService {
@@ -134,7 +213,7 @@ class AppService {
             .then(response => {
                 if (response.status !== 200) {
                     console.error("[ERROR] Response status: ", response.status);
-                    throw new Error('[ERROR] Failed to fetch app name. Unexpected response status.')
+                    throw new Error('[ERROR] Failed to fetch app name. Unexpected response status.');
                 }
 
                 return response.text();
@@ -152,9 +231,9 @@ class UserService {
             .then(response => {
                 if (response.status !== 200) {
                     console.error("[ERROR] Response status: ", response.status);
-                    throw new Error("[ERROR] Failed to fetch users.")
+                    throw new Error("[ERROR] Failed to fetch users.");
                 }
-                // if response.code = 200 -> 2 ways
+                // if response.code === 200 -> 2 ways
                 const contentType = response.headers.get('Content-Type');
 
                 // 1. Content type = 'text/html'
@@ -170,7 +249,7 @@ class UserService {
                 // 3. catchError
                 } else {
                     console.error("[ERROR] Unexpected Content-Type: ", contentType);
-                    throw new Error("[ERROR] Unexpected Content-Type.")
+                    throw new Error("[ERROR] Unexpected Content-Type.");
                 }
             })
             .catch(error => {
@@ -181,8 +260,8 @@ class UserService {
 
     static async postUsers(firstName, lastName, age) {
         if(!firstName || !lastName || age === undefined) {
-            console.error("[ERROR] Invalid parameters.")
-            throw new Error ("Invalid parameters.");
+            console.error("[ERROR] Invalid parameters.");
+            throw new Error("Invalid parameters.");
         }
 
         try {
@@ -226,18 +305,36 @@ class UserService {
 //event to show App Name
 document.addEventListener('DOMContentLoaded', UI.displayAppName);
 
-//event to activate addButton
-document.addEventListener('input', UI.activateAddButton);
-
 //event to display users
-document.addEventListener("DOMContentLoaded", UI.displayUsers);
+document.addEventListener('DOMContentLoaded', UI.displayUsers);
 
-//event to add user to DB, get list of all users, create user as an object, and display user in the table
-form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const user = await UI.createUser();
-    UI.addUserToList(user);
+// we are on tab Add
+if(formAdd !== null){
+    //event to activate addButton
+    formAdd.addEventListener('input', UI.activateAddButton);
 
-    form.reset();
-    addButton.disabled = true;
-});
+    //event to add user to DB, get list of all users, create user as an object, and display user in the table
+    formAdd.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const user = await UI.createUser();
+        UI.addUserToList(user);
+
+        formAdd.reset();
+        addButton.disabled = true;
+    });
+}
+
+// we are on Search tab
+if(formSearch !== null) {
+    formSearch.addEventListener('input', UI.activateSearchButton);
+
+    formSearch.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        UI.preventSearchUrl();
+
+        await UI.searchUsers();
+
+        formSearch.reset();
+        searchButton.disabled = true;
+    });
+}

@@ -36,7 +36,7 @@
 
     <h2 class="text-center mt-5 mb-3">Search User</h2>
     <div class="container">
-        <form class="border border-secondary p-2" id="form-user">
+        <form class="border border-secondary p-2" id="form-search">
             <div class="form-group ">
                 <label for="userId">User ID</label>
                 <input type="text" class="form-control"
@@ -70,22 +70,10 @@
           </div>
         </form>
     </div>
-    <h2 class="text-center mt-5">Users List</h2>
-    <div class="container">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">First</th>
-                    <th scope="col">Last</th>
-                    <th scope="col">Age</th>
-                    <th scope="col">ID</th>
-                </tr>
-            </thead>
-                <tbody id="usersList"></tbody>
-        </table>
-    </div>
 
-    <script src="script.js"></script>
+    <div id="table"></div>
+
+    <script src="script/table.js"></script>
+    <script src="script/script.js"></script>
 </body>
 </html>
