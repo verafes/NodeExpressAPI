@@ -12,6 +12,8 @@ const createTable = () => {
                         <th scope="col">Last</th>
                         <th scope="col">Age</th>
                         <th scope="col">ID</th>
+                        <th scope="col">Edit</th>
+                        <th scope="col">Delete</th>
                     </tr>
                 </thead>
                     <tbody id="usersList"></tbody>

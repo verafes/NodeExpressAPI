@@ -14,3 +14,24 @@ h2 {
 .form-group {
     margin: 20px;
 }
+
+.icon {
+    cursor: pointer;
+}
+
+.icon a {
+    color: black;
+    text-decoration: none;
+}
+
+#editIcon a:hover {
+    color: darkcyan;
+}
+
+#deleteIcon a:hover {
+    color: red;
+}
+
+input[readonly]::placeholder {
+    color: darkgrey;
+}
