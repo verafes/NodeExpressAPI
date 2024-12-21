@@ -15,10 +15,10 @@ const formDelete = document.getElementById('form-delete');
 
 let rowNumber = 1;
 const PORT = 5000;
-const defaultIdPlaceholder = "Enter user ID ..."
-const defaultFirstNamePlaceholder = "Enter first name ..."
-const defaultLastNamePlaceholder = "Enter last name ..."
-const defaultAgePlaceholder = "Enter age ..."
+const defaultIdPlaceholder = "Enter user ID..."
+const defaultFirstNamePlaceholder = "Enter first name..."
+const defaultLastNamePlaceholder = "Enter last name..."
+const defaultAgePlaceholder = "Enter age..."
 
 //mock data
 const usersFromData = [
@@ -79,12 +79,13 @@ class UI {
 
     static async displayUsers() {
         // const users = storedUsers; // Mock data
-        const users = await UserService.getUsers();
+        const users = await UserService.getUsers() || [];
 
-        if (Array.isArray(users) && users.length) {
+        if (typeof users !== 'string' && users.length) {
             users.forEach((user) => {
                 console.log('user = ', user);
-                UI.addUserToList(user);
+                UI.addUserToList(user, rowNumber);
+                rowNumber ++;
             });
         }
     }
@@ -123,17 +124,17 @@ class UI {
         }
     }
 
-    static addUserToList(user) {
+    static addUserToList(user, number) {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <th scope="row">${rowNumber}</th>
-            <td data-row="firstName">${user.firstName}</td>
-            <td data-row="lastName">${user.lastName}</td>
-            <td data-row="age">${user.age}</td>
-            <td data-row="userId">${user.id}</td>
+            <th scope="row">${number}</th>
+            <td>${user.firstName}</td>
+            <td>${user.lastName}</td>
+            <td>${user.age}</td>
+            <td>${user.id}</td>
             <td>
                 <i class="icon" id="editIcon">
-                    <a href="/edit">
+                    <a href="/edit" class="bi-pen">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pen" viewBox="0 0 16 16">
                             <path d="m13.498.795.149-.149a1.207 1.207 0 1 1 1.707 1.708l-.149.148a1.5 1.5 0 0 1-.059 2.059L4.854 14.854a.5.5 0 0 1-.233.131l-4 1a.5.5 0 0 1-.606-.606l1-4a.5.5 0 0 1 .131-.232l9.642-9.642a.5.5 0 0 0-.642.056L6.854 4.854a.5.5 0 1 1-.708-.708L9.44.854A1.5 1.5 0 0 1 11.5.796a1.5 1.5 0 0 1 1.998-.001m-.644.766a.5.5 0 0 0-.707 0L1.95 11.756l-.764 3.057 3.057-.764L14.44 3.854a.5.5 0 0 0 0-.708z"/>
                         </svg>
@@ -142,7 +143,7 @@ class UI {
             </td>
             <td>
                 <i class="icon" id="deleteIcon">
-                    <a href="/delete">
+                    <a href="/delete" class="bi-trash">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
                             <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
                             <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
@@ -153,7 +154,6 @@ class UI {
         `;
 
         usersList.appendChild(row);
-        rowNumber++;
     }
 
     static getSearchCriteria() {
@@ -293,6 +293,36 @@ class UI {
             deleteButton.disabled = false;
         }
     }
+
+    static getUpdatedUser() {
+        let updatedUser = {};
+        updatedUser.id = localStorage.getItem('idValue');
+
+        if(firstNameInput.value.toString().trim()) {
+            updatedUser.firstName = firstNameInput.value.toString().trim();
+        }
+        if(lastNameInput.value.toString().trim()) {
+            updatedUser.lastName = lastNameInput.value.toString().trim();
+        }
+        if(ageInput.value.toString().trim()) {
+            updatedUser.age = ageInput.value.toString().trim();
+        }
+
+        console.log("updatedUser = ", updatedUser);
+
+        return updatedUser;
+    }
+
+    static async editUser() {
+        const updatedUser = UI.getUpdatedUser();
+        await UserService.patchUsers(updatedUser);
+    }
+
+    static async deleteUser() {
+        const id = localStorage.getItem('idValue');
+        await UserService.deleteUsers(id);
+    }
+
 }
 
 class AppService {
@@ -314,7 +344,7 @@ class AppService {
 }
 
 class UserService {
-    static getUsers() {
+    static async getUsers() {
         return fetch(`http://localhost:${PORT}/api/users/`)
             .then(response => {
                 if (response.status !== 200) {
@@ -347,8 +377,8 @@ class UserService {
     }
 
     static async postUsers(firstName, lastName, age) {
-        if(!firstName || !lastName || age === undefined) {
-            console.error("[ERROR] Invalid parameters.");
+        if (!firstName || !lastName || age === undefined) {
+            console.error("[ERROR] Invalid parameters.")
             throw new Error("Invalid parameters.");
         }
 
@@ -376,6 +406,58 @@ class UserService {
 
             const contentType = response.headers.get('Content-Type');
 
+            if (contentType.includes('text/html')) {
+
+                return await response.text();
+            } else {
+                console.error("[ERROR] Unexpected Content-Type: ", contentType);
+                throw new Error("Unexpected Content-Type.");
+            }
+        } catch (error) {
+            console.error("Fetch error:", error);
+            throw error;
+        }
+    }
+
+    static async patchUsers(user) {
+        if (!user.id || (!user.firstName && !user.lastName && user.age === undefined)) {
+            console.error("[ERROR] Invalid parameters.");
+            throw new Error("Invalid parameters.");
+        }
+
+        let body = {};
+        if (user.firstName) {
+            body.firstName = user.firstName;
+        }
+        if (user.lastName) {
+            body.lastName = user.lastName;
+        }
+        if (user.age) {
+            body.age = user.age;
+        }
+
+        console.log(body);
+
+        try {
+            const response = await fetch(
+                `http://localhost:${PORT}/api/users/${user.id}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(
+                        body
+                    )
+                })
+
+            if (response.status !== 200) {
+                console.error("[ERROR] Response status:", response.status);
+                throw new Error("Failed to post users.");
+            }
+
+            const contentType = response.headers.get('Content-Type');
+
             if(contentType.includes('text/html')) {
 
                 return await response.text();
@@ -385,6 +467,39 @@ class UserService {
             }
         } catch(error) {
             console.error("Fetch error:", error);
+            throw error;
+        }
+    }
+
+    static async deleteUsers(id) {
+        if (!id) {
+            console.error("[ERROR] Invalid parameters.")
+            throw new Error("Invalid parameters.");
+        }
+
+        try {
+            const response = await fetch(
+                `http://localhost:${PORT}/api/users/${id}`,
+                {
+                    method: 'DELETE'
+                })
+
+            if (response.status !== 200) {
+                console.error("[ERROR] Response status:", response.status);
+                throw new Error("Failed to post users.");
+            }
+
+            const contentType = response.headers.get('Content-Type');
+
+            if (contentType.includes('text/html')) {
+
+                return await response.text();
+            } else {
+                console.error("[ERROR] Unexpected Content-Type: ", contentType);
+                throw new Error("Unexpected Content-Type.");
+            }
+        } catch (error) {
+            console.error("Fetch error: ", error);
             throw error;
         }
     }
@@ -405,7 +520,8 @@ if(formAdd !== null){
     formAdd.addEventListener('submit', async (event) => {
         event.preventDefault();
         const user = await UI.createUser();
-        UI.addUserToList(user);
+        UI.addUserToList(user, rowNumber);
+        rowNumber ++;
 
         formAdd.reset();
         addButton.disabled = true;
@@ -414,6 +530,7 @@ if(formAdd !== null){
 
 // we are on Search tab
 if(formSearch !== null) {
+    UI.clearLocalStorage();
     formSearch.addEventListener('input', UI.activateSearchButton);
 
     formSearch.addEventListener('submit', async (event) => {
@@ -463,6 +580,11 @@ if(formEdit !== null) {
         ageInput.style.background = "#E8F0FE";
         UI.activateEditButton();
     })
+
+    editButton.addEventListener('click', async () => {
+        await UI.editUser();
+        UI.activateEditButton();
+    })
 }
 
 //we are on tab Delete
@@ -470,5 +592,10 @@ if(formDelete !== null) {
     document.addEventListener('DOMContentLoaded', () => {
         UI.fillPlaceholders();
         UI.activateDeleteButton();
+    })
+
+    deleteButton.addEventListener('click', async () => {
+        await UI.deleteUser();
+        UI.clearLocalStorage();
     })
 }
