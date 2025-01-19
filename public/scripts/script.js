@@ -327,7 +327,7 @@ class UI {
 
 class AppService {
     static getAppName() {
-        return fetch(`http://localhost:${PORT}/api/`)
+        return fetch(`https://nodeexpressapi-sfjq.onrender.com/api/`)
             .then(response => {
                 if (response.status !== 200) {
                     console.error("[ERROR] Response status: ", response.status);
@@ -345,7 +345,7 @@ class AppService {
 
 class UserService {
     static async getUsers() {
-        return fetch(`http://localhost:${PORT}/api/users/`)
+        return fetch(`https://nodeexpressapi-sfjq.onrender.com/api/users/`)
             .then(response => {
                 if (response.status !== 200) {
                     console.error("[ERROR] Response status: ", response.status);
@@ -384,7 +384,7 @@ class UserService {
 
         try {
             const response = await fetch(
-                `http://localhost:${PORT}/api/users/`,
+                `https://nodeexpressapi-sfjq.onrender.com/api/users/`,
                 {
                     method: 'POST',
                     headers: {
@@ -440,7 +440,7 @@ class UserService {
 
         try {
             const response = await fetch(
-                `http://localhost:${PORT}/api/users/${user.id}`,
+                `https://nodeexpressapi-sfjq.onrender.com/api/users/${user.id}`,
                 {
                     method: 'PATCH',
                     headers: {
@@ -479,7 +479,7 @@ class UserService {
 
         try {
             const response = await fetch(
-                `http://localhost:${PORT}/api/users/${id}`,
+                `https://nodeexpressapi-sfjq.onrender.com/api/users/${id}`,
                 {
                     method: 'DELETE'
                 })
